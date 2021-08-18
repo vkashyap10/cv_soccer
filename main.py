@@ -47,6 +47,5 @@ if __name__ == "__main__":
     # plt.title("gradient in y")
     # plt.show()
 
-
     cv2.waitKey(0)
     cv2.destroyAllWindows()
