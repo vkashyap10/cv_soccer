@@ -14,27 +14,42 @@ if __name__ == "__main__":
 
     # Read first frame.
     ok, frame = video.read()
+    print(frame.shape)
+    # compute gradient of entire image
+    grad_x,grad_y = return_gradient(frame)
 
     # select bounding box
     bbox = cv2.selectROI(frame)
 
-    # Crop image
+    print("output from bbox", bbox)
+
+    # Crop image and gradients
     imCrop = frame[int(bbox[1]):int(bbox[1]+bbox[3]), int(bbox[0]):int(bbox[0]+bbox[2])]
+    grad_xcrop = grad_x[int(bbox[1]):int(bbox[1]+bbox[3]), int(bbox[0]):int(bbox[0]+bbox[2])]
+    grad_ycrop = grad_y[int(bbox[1]):int(bbox[1]+bbox[3]), int(bbox[0]):int(bbox[0]+bbox[2])]
 
-    # compute gradient of image
-    grad_x,grad_y = return_gradient(imCrop)
-
-    # verify goal post corners are harris corners by computing harris conrers for cropped image
-    h_score = return_hFeatureScore(grad_x,grad_y)
-    # threshold = np.nanpercentile(h_score,99)
-    threshold = np.sort(h_score.ravel())[-10]
-
-    h_corners = np.where(h_score > threshold)
-    print("number of harris corners detected ", len(h_corners[0]))
+    # find best feature to track within cropped image
+    h_score = return_hFeatureScore(grad_xcrop,grad_ycrop)
+    threshold = np.sort(h_score.ravel())[-1]
+    hc_crop= np.where(h_score >= threshold)
+    print("best harris corner at ", hc_crop)
 
     plt.imshow(imCrop)
-    plt.scatter(h_corners[1], h_corners[0], marker="x", color="red", s=200)
+    plt.scatter(hc_crop[1], hc_crop[0], marker="x", color="red", s=200)
+    plt.title("Best harris coerner in cropped image")
     plt.show()
+
+    # get coordinates of best feature in full image
+    hc = np.zeros((2,1))
+    hc[0] = hc_crop[0] + int(bbox[1])
+    hc[1] = hc_crop[1] + int(bbox[0])
+    plt.imshow(frame)
+    plt.scatter(hc[1], hc[0], marker="x", color="red", s=200)
+    plt.title("Best harris coerner in full image")
+    plt.show()
+
+    print("coordinates of best feature to track", hc)
+    # klt_tracker(frame0,frame1,grad_x,grad_y,hc)
 
     # Display gradients image
     # cv2.imshow("grayscale_im", grayscale_im)
