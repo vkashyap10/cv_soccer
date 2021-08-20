@@ -14,8 +14,8 @@ def return_hFeatureScore(grad_x,grad_y):
 
     border = int(len(window_list)/2 + 1)
     # initialize the moment matrix
-    for i in range(border,grad_x.shape[0]-border,5):
-        for j in range(border,grad_y.shape[1]-border,5):
+    for i in range(border,grad_x.shape[0]-border):
+        for j in range(border,grad_y.shape[1]-border):
             M = np.zeros((2,2))
             for k in window_list:
                 for l in window_list:
