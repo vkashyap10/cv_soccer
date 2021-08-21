@@ -52,55 +52,8 @@ def solveHomographySvd(p_old,p0):
 	AtA = np.array(AtA, dtype=float)
 
 	w,v = np.linalg.eig(AtA)
-	print("eigenvalues", w)
 	min_index = np.argmin(w)
 
 	m = v[:,min_index]
 
 	return m
-
-
-
-cap = cv2.VideoCapture('data/project.mp4')
-
-img2warp = cv2.imread('data/golden.jpg')
-
-plt.imshow(img2warp)
-plt.show()
-
-ret, old_frame = cap.read()
-
-print("video frame shape",old_frame.shape)
-print("new pic shape",img2warp.shape)
-
-hc = getCorners2Track(old_frame)
-
-plt.imshow(old_frame)
-plt.scatter(hc[:,:,0], hc[:,:,1], marker="x", color="red", s=200)
-plt.title("Best harris corner")
-plt.show()
-
-
-# store initial points to track 
-p0 = hc.copy()
-p0 = np.float32(p0)
-
-p_old = np.zeros(p0.shape)
-p_old[0,:,:] = 0,old_frame.shape[0]
-p_old[2,:,:] = old_frame.shape[1],0
-p_old[3,:,:] = old_frame.shape[1],old_frame.shape[0]
-
-m = solveHomographySvd(p_old,p0).reshape(3,3)
-
-new_image = inverse_warp(img2warp,m)
-
-final_image = ((old_frame + new_image)/2).astype(int)
-
-plt.imshow(final_image)
-plt.scatter(hc[:,:,0], hc[:,:,1], marker="x", color="red", s=200)
-plt.title("Best harris corner")
-plt.show()
-
-cv2.destroyAllWindows()
-cap.release()
-
