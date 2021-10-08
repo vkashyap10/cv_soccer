@@ -10,11 +10,11 @@ from getCorners2Track import getCorners2Track
 from h_main import solveHomographySvd
 from h_main import inverse_warp
 
-cap = cv2.VideoCapture('data/project.mp4')
-img2warp = cv2.imread('data/golden.jpg')
+cap = cv2.VideoCapture('data/ronaldo_goal.mp4')
+img2warp = cv2.imread('data/golden_4.jpg')
 
 # Parameters for lucas kanade optical flow
-lk_params = dict( winSize  = (35,35),
+lk_params = dict( winSize  = (50,50),
                   maxLevel = 2,
                   criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
 
@@ -23,7 +23,9 @@ color = np.random.randint(0,255,(100,3))
 
 # Take first frame and find corners in it
 ret, old_frame = cap.read()
-print("frame type", old_frame.dtype)
+
+print("frame size", old_frame.shape)
+print("imgae size",img2warp.shape)
 
 hc = getCorners2Track(old_frame)
 
@@ -48,10 +50,13 @@ old_gray = cv2.cvtColor(old_frame, cv2.COLOR_BGR2GRAY)
 
 # Create a mask image for drawing purposes
 mask = np.zeros_like(old_frame)
-list_frames = []
+frames_list = []
 while(1):
     ret,frame = cap.read()
-    frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    try:
+        frame_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    except:
+        break
 
     # calculate optical flow
     p1, st, err = cv2.calcOpticalFlowPyrLK(old_gray, frame_gray, p0, None, **lk_params)
@@ -64,10 +69,12 @@ while(1):
     m = solveHomographySvd(p_old,p1).reshape(3,3)
     new_image = inverse_warp(img2warp,m)
     new_image = np.uint8(new_image)
-    frame = cv2.add(frame,new_image)
-    
-    # frame = ((frame + new_image)/2).astype(int)
+    print(frame.shape)
+    print(new_image.shape)
+    # frame = cv2.add(frame,new_image)
+    frame = cv2.addWeighted(frame,0.3,new_image,0.7,0)
 
+    
     # draw the tracks
     for i,(new,old) in enumerate(zip(good_new,good_old)):
         a,b = new.ravel()
@@ -82,11 +89,20 @@ while(1):
     if k == 27:
         break
 
-    list_frames.append(img)
+    frames_list.append(img)
     
     # Now update the previous frame and previous points
     old_gray = frame_gray.copy()
     p0 = good_new.reshape(-1,1,2)
+
+# save video
+height, width, layers = frames_list[0].shape
+size = (width,height)
+out = cv2.VideoWriter('track_homography.mp4',cv2.VideoWriter_fourcc(*'MP4V'), 15, size)
+ 
+for i in range(len(frames_list)):
+    out.write(frames_list[i])
+out.release()
 
 cv2.destroyAllWindows()
 cap.release()
