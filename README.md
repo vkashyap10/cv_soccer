@@ -7,6 +7,7 @@ Clone the repo and run main.py
 While selecting Harris corneres in your region of interest, start with the bottom left and move in an anticlockwise manner. 
 
 Saved solution video file : track_homography.mp4
+
 Original video : data/ronaldo_goal.mp4
 
 # How it works
